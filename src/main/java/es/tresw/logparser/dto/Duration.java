@@ -1,7 +1,11 @@
 package es.tresw.logparser.dto;
 
 import java.util.Arrays;
-
+/**
+ * Enum holding the possible duration options HOURLY and DAILY
+ * @author aalves
+ *
+ */
 public enum Duration {
 
 	HOURLY("HOURLY"), DAILY("DAILY");

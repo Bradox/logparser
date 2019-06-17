@@ -74,20 +74,21 @@ Java
 The application was implemented using java8, spring-boot and maven
 
 (1) create a database schema, named, for example logparser.
+**Note:** To run the tests you will have to create a different database and configure test.properties in src/test/resources
 (2) Update configuration. In deliverables/application.properties set up the connection changing the database url, user and password.
 (3) To run the program go to folder deliverables and run:
 
-    java -jar parser.jar --accesslog=[PATH_TO_ACCESS_LOG]  --startDate=[START DATE] --duration=[HOURLY] --threshold=[INTEGER]
+    java -jar parser-1.0.jar --accesslog=[PATH_TO_ACCESS_LOG]  --startDate=[START DATE] --duration=[HOURLY] --threshold=[INTEGER]
     
     for example: 
     
-     java -jar parser.jar --accesslog=access.log  --startDate=2017-01-01.13:00:00 --duration=hourly --threshold=100
+     java -jar parser-1.0.jar --accesslog=access.log  --startDate=2017-01-01.13:00:00 --duration=hourly --threshold=100
      
 **Warning:** access.log is not inside deliverables use a correct path
 
 To show help run:
 
-    java -jar parser.jar --help
+    java -jar parser-1.0.jar --help
 
                 
 Deliverables
@@ -95,7 +96,7 @@ Deliverables
 
 (1) Java program that can be run from command line
 	
-	deliverables/parser.jar
+	deliverables/parser-1.0.jar
    
 (2) Source Code for the Java program
 
@@ -109,3 +110,10 @@ Deliverables
  	
  	deliverables/sql.test
  	
+TODO
+========
+
+(1) Findout why dbunit made mocking of ApplicationArguments impossible. That is why for testig we use a different databse, in order to be able to set
+the state of the database to a known one in order to test.<br/>
+(2) Change writing to the console (System.out) to use logs.<br/>
+(3) Findout how to arguments to tests<br/>

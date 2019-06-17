@@ -12,6 +12,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Model that represents the Blocked ip's
+ * @author aalves
+ *
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

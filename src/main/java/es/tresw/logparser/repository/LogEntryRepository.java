@@ -10,6 +10,11 @@ import org.springframework.stereotype.Repository;
 
 import es.tresw.logparser.model.LogEntry;
 
+/**
+ * log entry repository, just exposes the default JpaRepository methods
+ * @author aalves
+ *
+ */
 @Repository
 public interface LogEntryRepository extends JpaRepository<LogEntry, Long> {
 

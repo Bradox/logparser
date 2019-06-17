@@ -14,6 +14,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.ApplicationArguments;
 import org.springframework.stereotype.Service;
 
 import es.tresw.logparser.dto.Parameters;
@@ -22,6 +23,11 @@ import es.tresw.logparser.model.LogEntry;
 import es.tresw.logparser.repository.BlockedIPRepository;
 import es.tresw.logparser.repository.LogEntryRepository;
 
+/**
+ * Class that orchestrates all the operations to read the file, parse the file into Objects, stores them
+ * @author aalves
+ *
+ */
 @Service
 public class LogService {
 
@@ -31,13 +37,22 @@ public class LogService {
 	@Autowired
 	private BlockedIPRepository blockedIPRepository;
 
+	@Autowired
+	private ApplicationArguments applicationArguments;
+	
+	private Parameters params;
+	
 	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
 	private static final char PIPE = '|';
+	
+	public LogService() {
+		params = new Parameters(applicationArguments);
+	}
 
-	public void parseFile(String file) throws FileNotFoundException, IOException {
+	public void parseFile() throws FileNotFoundException, IOException {
 		List<LogEntry> log = new ArrayList<>();
-		try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(params.getAccessLog()), "UTF-8"));
 				CSVParser csvFileParser = new CSVParser(br, CSVFormat.DEFAULT.withDelimiter(PIPE))) {
 
 			// Get a list of CSV file records
@@ -62,14 +77,13 @@ public class LogService {
 		}
 	}
 
-	public List<BlockedIP> find(Parameters params) {
-
+	public List<BlockedIP> find() {
 		List<LogEntry> entries = logEntryRepository.findByAccountAndCreatedBefore(params.getStartDate(),
 				params.getEndDate(), params.getThreshold());
-		return saveBlockedIps(params, entries);
+		return saveBlockedIps(entries);
 	}
 
-	public List<BlockedIP> saveBlockedIps(Parameters params, List<LogEntry> logEntries) {
+	public List<BlockedIP> saveBlockedIps(List<LogEntry> logEntries) {
 		List<BlockedIP> blockedIPs = new ArrayList<>();
 		logEntries.forEach(l -> {
 			BlockedIP ip = new BlockedIP();
@@ -82,5 +96,19 @@ public class LogService {
 		blockedIPRepository.saveAll(blockedIPs);
 		return blockedIPs;
 	}
+	
+	public boolean showHelp() {
+		return params.isHelp();
+	}
 
+	public boolean requiredPresent() {
+		return params.requiredPresent();
+	}
+	
+	/*
+	 * for testing purposes
+	 */
+	protected void setParameters(ApplicationArguments args) {
+		this.params=new Parameters(args);
+	}
 }

@@ -9,7 +9,11 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-
+/**
+ * This class reads the arguments introduced by the user and parses them
+ * @author aalves
+ *
+ */
 @Data
 public class Parameters {
 	private long threshold;
@@ -24,32 +28,36 @@ public class Parameters {
 
 	public Parameters(ApplicationArguments args) {
 		try {
-			this.args = args;
-			if (args.containsOption("help")) {
-				this.help = true;
-			}
-			if (args.containsOption("startDate")) {
-				String date = args.getOptionValues("startDate").get(0);
-				this.startDate = LocalDateTime.parse(date, formatter);
-			}
-			if (args.containsOption("duration")) {
-				Duration duration = Duration.findByLabel(args.getOptionValues("duration").get(0));
-				switch (duration) {
-				case HOURLY:
-					this.endDate = this.startDate.plusHours(1);
-					this.endDate = this.endDate.minusSeconds(1);
-					break;
-				case DAILY:
-					this.endDate = this.startDate.plusDays(1);
-					this.endDate = this.endDate.minusSeconds(1);
-					break;
+			if(args!=null) {
+				this.args = args;
+				if (args.containsOption("help")) {
+					this.help = true;
 				}
-			}
-			if (args.containsOption("threshold")) {
-				this.threshold = Integer.valueOf(args.getOptionValues("threshold").get(0));
-			}
-			if (args.containsOption("accesslog")) {
-				this.accessLog = args.getOptionValues("accesslog").get(0);
+				if (args.containsOption("startDate")) {
+					String date = args.getOptionValues("startDate").get(0);
+					this.startDate = LocalDateTime.parse(date, formatter);
+				}
+				if (args.containsOption("duration")) {
+					Duration duration = Duration.findByLabel(args.getOptionValues("duration").get(0));
+					switch (duration) {
+					case HOURLY:
+						this.endDate = this.startDate.plusHours(1);
+						this.endDate = this.endDate.minusSeconds(1);
+						break;
+					case DAILY:
+						this.endDate = this.startDate.plusDays(1);
+						this.endDate = this.endDate.minusSeconds(1);
+						break;
+					}
+				}
+				if (args.containsOption("threshold")) {
+					this.threshold = Integer.valueOf(args.getOptionValues("threshold").get(0));
+				}
+				if (args.containsOption("accesslog")) {
+					this.accessLog = args.getOptionValues("accesslog").get(0);
+				}
+			} else {
+				this.help=false;
 			}
 		} catch (Exception e) {
 			throw new IllegalArgumentException();
@@ -57,7 +65,8 @@ public class Parameters {
 	}
 
 	public boolean requiredPresent() {
-		return (this.args.containsOption("accesslog") && this.args.containsOption("startDate")
+		return ( this.args!=null && this.args.containsOption("accesslog") && this.args.containsOption("startDate")
 				&& this.args.containsOption("duration") && this.args.containsOption("threshold"));
 	}
+	
 }

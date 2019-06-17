@@ -24,7 +24,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import es.tresw.logparser.dto.Parameters;
+import es.tresw.logparser.LogParserApplication;
 import es.tresw.logparser.model.LogEntry;
 import es.tresw.logparser.repository.LogEntryRepository;
 
@@ -43,7 +43,7 @@ public class LogServiceTest {
 	ApplicationArguments applicationArguments;
 
 	@Before
-	public void before() {
+	public void before() throws Exception {
 		when(applicationArguments.containsOption("startDate")).thenReturn(true);
 		when(applicationArguments.containsOption("duration")).thenReturn(true);
 		when(applicationArguments.getOptionValues("startDate")).thenReturn(Arrays.asList("2017-01-01.00:00:00"));
@@ -82,14 +82,16 @@ public class LogServiceTest {
 	public void findDaily() {
 		when(applicationArguments.getOptionValues("duration")).thenReturn(Arrays.asList("daily"));
 		when(applicationArguments.getOptionValues("threshold")).thenReturn(Arrays.asList("1"));
-		assertTrue(logService.find(new Parameters(applicationArguments)).size() == 2);
+		logService.setParameters(applicationArguments);
+		assertTrue(logService.find().size() == 2);
 	}
 
 	@Test
 	public void findHourly() {
 		when(applicationArguments.getOptionValues("duration")).thenReturn(Arrays.asList("hourly"));
 		when(applicationArguments.getOptionValues("threshold")).thenReturn(Arrays.asList("2"));
-		assertTrue(logService.find(new Parameters(applicationArguments)).size() == 1);
+		logService.setParameters(applicationArguments);
+		assertTrue(logService.find().size() == 1);
 	}
 	
 	@Test
@@ -98,7 +100,9 @@ public class LogServiceTest {
 		when(applicationArguments.getOptionValues("threshold")).thenReturn(Arrays.asList("5"));
 		Path resourceDirectory = Paths.get("src","test","resources");
 		String absolutePath = resourceDirectory.toFile().getAbsolutePath();
-		logService.parseFile(absolutePath+"/access.log");
-		assertTrue(logService.find(new Parameters(applicationArguments)).size() == 2);
+		when(applicationArguments.getOptionValues("accesslog")).thenReturn(Arrays.asList(absolutePath+"/access.log"));
+		logService.setParameters(applicationArguments);
+		logService.parseFile();
+		assertTrue(logService.find().size() == 2);
 	}
 }

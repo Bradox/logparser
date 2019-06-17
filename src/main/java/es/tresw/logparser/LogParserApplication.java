@@ -13,6 +13,11 @@ import es.tresw.logparser.dto.Parameters;
 import es.tresw.logparser.model.BlockedIP;
 import es.tresw.logparser.service.LogService;
 
+/**
+ * Application entry point
+ * @author aalves
+ *
+ */
 @SpringBootApplication
 public class LogParserApplication implements ApplicationRunner {
 
@@ -25,17 +30,17 @@ public class LogParserApplication implements ApplicationRunner {
 
 	@Override
 	public void run(ApplicationArguments args) {
-		Parameters params = null;
 		try {
-			params = new Parameters(args);
-
-			if (params.isHelp()) {
+			//User requested help
+			if (logService.showHelp()) {
 				printHelp();
-			} else if (params.requiredPresent()) {
-				logService.parseFile(params.getAccessLog());
-				List<BlockedIP> blockedIPs = logService.find(params);
+			} else if (logService.requiredPresent()) {
+				//All required parameters are present
+				logService.parseFile();
+				List<BlockedIP> blockedIPs = logService.find();
 				blockedIPs.forEach(ip -> System.out.println(ip.getComment()));
 			} else {
+				//Wrong parameters
 				System.out.println("Wrong parameters the right usage is:");
 				printHelp();
 			}
@@ -44,7 +49,7 @@ public class LogParserApplication implements ApplicationRunner {
 			printHelp();
 			e.printStackTrace();
 		} catch (IOException e) {
-			System.out.println("Problem reading file " + params.getAccessLog());
+			System.out.println("Problem reading file log");
 			e.printStackTrace();
 		}
 	}
