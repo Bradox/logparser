@@ -12,13 +12,14 @@ import es.tresw.logparser.model.LogEntry;
 
 /**
  * log entry repository, just exposes the default JpaRepository methods
+ * 
  * @author aalves
  *
  */
 @Repository
 public interface LogEntryRepository extends JpaRepository<LogEntry, Long> {
 
-	@Query("SELECT l FROM LogEntry l WHERE l.startDate BETWEEN :startDate AND :endDate GROUP BY l.ip HAVING count(l.ip) >= :threshold")
-	public List<LogEntry> findByAccountAndCreatedBefore(@Param("startDate") LocalDateTime startDate,
+	@Query("SELECT l.ip FROM LogEntry l WHERE l.startDate BETWEEN :startDate AND :endDate GROUP BY l.ip HAVING count(l.ip) >= :threshold")
+	public List<String> findIPsByAccountAndCreatedBefore(@Param("startDate") LocalDateTime startDate,
 			@Param("endDate") LocalDateTime endDate, @Param("threshold") long threshold);
 }

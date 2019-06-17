@@ -74,7 +74,6 @@ Java
 The application was implemented using java8, spring-boot and maven
 
 (1) create a database schema, named, for example logparser.
-**Note:** To run the tests you will have to create a different database and configure test.properties in src/test/resources
 (2) Update configuration. In deliverables/application.properties set up the connection changing the database url, user and password.
 (3) To run the program go to folder deliverables and run:
 
@@ -113,7 +112,11 @@ Deliverables
 TODO
 ========
 
-(1) Findout why dbunit made mocking of ApplicationArguments impossible. That is why for testig we use a different databse, in order to be able to set
-the state of the database to a known one in order to test.<br/>
-(2) Change writing to the console (System.out) to use logs.<br/>
-(3) Findout how to arguments to tests<br/>
+1. Make it fail safe applicati0n. One way could be to track the entries that have been process, so that if the execution ends abruptly we can reprocess without deletion of the database nor encuenter issues with duplicates<br/>
+2. Investigate issues with ApplicationArguments impossible:<br/>
+	-why dbunit made mocking of ApplicationArguments impossible
+	-why @autowire ApplicationArguments in a service does not work
+3. Make it a spring application, no spring boot. 
+4. Use logs instead of writing to the console (System.out).<br/>
+5. Use logs instead of writing to the console (System.out).<br/>
+6. Findout how to pass arguments to tests<br/>

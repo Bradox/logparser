@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Model that represents the Blocked ip's
+ * 
  * @author aalves
  *
  */

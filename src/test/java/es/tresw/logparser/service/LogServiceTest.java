@@ -1,6 +1,7 @@
 package es.tresw.logparser.service;
 
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.mockito.Mockito.when;
 
 import java.io.FileNotFoundException;
@@ -13,7 +14,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.After;
+import javax.transaction.Transactional;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,13 +26,14 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import es.tresw.logparser.LogParserApplication;
 import es.tresw.logparser.model.LogEntry;
+import es.tresw.logparser.repository.BlockedIPRepository;
 import es.tresw.logparser.repository.LogEntryRepository;
 
 @SpringBootTest
 @RunWith(SpringJUnit4ClassRunner.class)
 @TestPropertySource(locations = "classpath:test.properties")
+@Transactional
 public class LogServiceTest {
 
 	@Autowired
@@ -39,8 +42,11 @@ public class LogServiceTest {
 	@Autowired
 	private LogEntryRepository logEntryRepository;
 
+	@Autowired
+	private BlockedIPRepository blockedIPRepository;
+
 	@MockBean
-	ApplicationArguments applicationArguments;
+	private ApplicationArguments applicationArguments;
 
 	@Before
 	public void before() throws Exception {
@@ -73,36 +79,40 @@ public class LogServiceTest {
 		logEntryRepository.saveAll(entries);
 	}
 
-	@After
-	public void after() {
-		logEntryRepository.deleteAll();
-	}
-
 	@Test
 	public void findDaily() {
 		when(applicationArguments.getOptionValues("duration")).thenReturn(Arrays.asList("daily"));
 		when(applicationArguments.getOptionValues("threshold")).thenReturn(Arrays.asList("1"));
 		logService.setParameters(applicationArguments);
-		assertTrue(logService.find().size() == 2);
+		List<String> ips = logService.findIPs();
+		assertThat(ips, hasSize(2));
+		logService.getAndSaveBlockedIps(ips);
+		assertThat(blockedIPRepository.findAll(), hasSize(2));
 	}
 
 	@Test
 	public void findHourly() {
 		when(applicationArguments.getOptionValues("duration")).thenReturn(Arrays.asList("hourly"));
-		when(applicationArguments.getOptionValues("threshold")).thenReturn(Arrays.asList("2"));
+		when(applicationArguments.getOptionValues("threshold")).thenReturn(Arrays.asList("1"));
 		logService.setParameters(applicationArguments);
-		assertTrue(logService.find().size() == 1);
+		List<String> ips = logService.findIPs();
+		assertThat(ips, hasSize(2));
+		logService.getAndSaveBlockedIps(ips);
+		assertThat(blockedIPRepository.findAll(), hasSize(2));
 	}
-	
+
 	@Test
 	public void parseFile() throws FileNotFoundException, IOException {
 		when(applicationArguments.getOptionValues("duration")).thenReturn(Arrays.asList("daily"));
 		when(applicationArguments.getOptionValues("threshold")).thenReturn(Arrays.asList("5"));
-		Path resourceDirectory = Paths.get("src","test","resources");
+		Path resourceDirectory = Paths.get("src", "test", "resources");
 		String absolutePath = resourceDirectory.toFile().getAbsolutePath();
-		when(applicationArguments.getOptionValues("accesslog")).thenReturn(Arrays.asList(absolutePath+"/access.log"));
+		when(applicationArguments.getOptionValues("accesslog")).thenReturn(Arrays.asList(absolutePath + "/access.log"));
 		logService.setParameters(applicationArguments);
 		logService.parseFile();
-		assertTrue(logService.find().size() == 2);
+		List<String> ips = logService.findIPs();
+		assertThat(ips, hasSize(2));
+		logService.getAndSaveBlockedIps(ips);
+		assertThat(blockedIPRepository.findAll(), hasSize(2));
 	}
 }

@@ -15,6 +15,8 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.DefaultApplicationArguments;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 
 import es.tresw.logparser.dto.Parameters;
@@ -24,7 +26,9 @@ import es.tresw.logparser.repository.BlockedIPRepository;
 import es.tresw.logparser.repository.LogEntryRepository;
 
 /**
- * Class that orchestrates all the operations to read the file, parse the file into Objects, stores them
+ * Class that orchestrates all the operations to read the file, parse the file
+ * into Objects, stores them
+ * 
  * @author aalves
  *
  */
@@ -36,23 +40,25 @@ public class LogService {
 
 	@Autowired
 	private BlockedIPRepository blockedIPRepository;
-
-	@Autowired
-	private ApplicationArguments applicationArguments;
 	
 	private Parameters params;
-	
+
 	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
 	private static final char PIPE = '|';
-	
+
 	public LogService() {
+		params = new Parameters(new DefaultApplicationArguments(new String[0]));
+	}
+	
+	public LogService(ApplicationArguments applicationArguments) {
 		params = new Parameters(applicationArguments);
 	}
 
 	public void parseFile() throws FileNotFoundException, IOException {
 		List<LogEntry> log = new ArrayList<>();
-		try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(params.getAccessLog()), "UTF-8"));
+		try (BufferedReader br = new BufferedReader(
+				new InputStreamReader(new FileInputStream(params.getAccessLog()), "UTF-8"));
 				CSVParser csvFileParser = new CSVParser(br, CSVFormat.DEFAULT.withDelimiter(PIPE))) {
 
 			// Get a list of CSV file records
@@ -77,26 +83,24 @@ public class LogService {
 		}
 	}
 
-	public List<BlockedIP> find() {
-		List<LogEntry> entries = logEntryRepository.findByAccountAndCreatedBefore(params.getStartDate(),
-				params.getEndDate(), params.getThreshold());
-		return saveBlockedIps(entries);
+	public List<String> findIPs() {
+		return logEntryRepository.findIPsByAccountAndCreatedBefore(params.getStartDate(), params.getEndDate(),
+				params.getThreshold());
 	}
 
-	public List<BlockedIP> saveBlockedIps(List<LogEntry> logEntries) {
+	public List<BlockedIP> getAndSaveBlockedIps(List<String> ips) {
 		List<BlockedIP> blockedIPs = new ArrayList<>();
-		logEntries.forEach(l -> {
-			BlockedIP ip = new BlockedIP();
-			ip.setIp(l.getIp());
-			ip.setComment("The IP: " + l.getIp() + " has reached the maximun number of request ("
-					+ params.getThreshold() + ") between " + params.getStartDate().toString() + " and "
-					+ params.getEndDate().toString());
-			blockedIPs.add(ip);
+		ips.forEach(ip -> {
+			BlockedIP bIp = new BlockedIP();
+			bIp.setIp(ip);
+			bIp.setComment("IP: " + ip + " has reached the threshold (" + params.getThreshold() + ") between "
+					+ params.getStartDate().toString() + " and " + params.getEndDate().toString());
+			blockedIPs.add(bIp);
 		});
 		blockedIPRepository.saveAll(blockedIPs);
 		return blockedIPs;
 	}
-	
+
 	public boolean showHelp() {
 		return params.isHelp();
 	}
@@ -104,11 +108,16 @@ public class LogService {
 	public boolean requiredPresent() {
 		return params.requiredPresent();
 	}
-	
+
+	public void deleteDatabase() {
+		blockedIPRepository.deleteAll();
+		logEntryRepository.deleteAll();
+	}
+
 	/*
 	 * for testing purposes
 	 */
 	protected void setParameters(ApplicationArguments args) {
-		this.params=new Parameters(args);
+		this.params = new Parameters(args);
 	}
 }

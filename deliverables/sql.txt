@@ -6,3 +6,7 @@ SELECT * FROM log_entry WHERE start_date BETWEEN startDate AND endDate GROUP BY 
 Example
 
 SELECT * FROM log_entry WHERE start_date BETWEEN '2017-01-01 00:00:00' AND '2017-01-01 00:59:59' GROUP BY ip HAVING count(ip) >= 1
+
+To get the count by ip change the ** * ** for **count(*), ip**, for example
+
+SELECT count(*), ip FROM logparsertest.log_entry  WHERE start_date BETWEEN '2017-01-01 00:00:00' AND '2017-01-01 00:59:59' GROUP BY ip HAVING count(ip) >= 1

@@ -14,9 +14,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 /**
  * Model that represents the log entries in the file
+ * 
  * @author aalves
  *
  */
