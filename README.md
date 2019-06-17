@@ -114,8 +114,8 @@ TODO
 
 1. Make it fail safe applicati0n. One way could be to track the entries that have been process, so that if the execution ends abruptly we can reprocess without deletion of the database nor encuenter issues with duplicates<br/>
 2. Investigate issues with ApplicationArguments impossible:<br/>
-	-why dbunit made mocking of ApplicationArguments impossible
-	-why @autowire ApplicationArguments in a service does not work
+   - why dbunit made mocking of ApplicationArguments impossible
+   - why @autowire ApplicationArguments in a service does not work
 3. Make it a spring application, no spring boot. 
 4. Use logs instead of writing to the console (System.out).<br/>
 5. Use logs instead of writing to the console (System.out).<br/>
