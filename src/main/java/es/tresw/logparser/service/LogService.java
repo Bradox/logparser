@@ -15,7 +15,6 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 
@@ -26,13 +25,14 @@ import es.tresw.logparser.repository.BlockedIPRepository;
 import es.tresw.logparser.repository.LogEntryRepository;
 
 /**
- * Class that orchestrates all the operations to read the file, parse the file
- * into Objects, stores them
+ * Class that orchestrates all the operations to read the file, parse the file 
+ * into Objects, stores them and finding the blocked ip's.
  * 
  * @author aalves
  *
  */
 @Service
+@DependsOn({ "springApplicationArguments" })
 public class LogService {
 
 	@Autowired
@@ -40,23 +40,25 @@ public class LogService {
 
 	@Autowired
 	private BlockedIPRepository blockedIPRepository;
-	
+
 	private Parameters params;
 
 	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
 	private static final char PIPE = '|';
 
-	public LogService() {
-		params = new Parameters(new DefaultApplicationArguments(new String[0]));
-	}
-	
-	public LogService(ApplicationArguments applicationArguments) {
-		params = new Parameters(applicationArguments);
+	@Autowired
+	public LogService(ApplicationArguments springApplicationArguments) {
+		params = new Parameters(springApplicationArguments);
 	}
 
-	public void parseFile() throws FileNotFoundException, IOException {
-		List<LogEntry> log = new ArrayList<>();
+	/**
+	 * This method parses the log file getting all the log entries
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public List<LogEntry> parseFile() throws FileNotFoundException, IOException {
+		List<LogEntry> logs = new ArrayList<>();
 		try (BufferedReader br = new BufferedReader(
 				new InputStreamReader(new FileInputStream(params.getAccessLog()), "UTF-8"));
 				CSVParser csvFileParser = new CSVParser(br, CSVFormat.DEFAULT.withDelimiter(PIPE))) {
@@ -64,8 +66,7 @@ public class LogService {
 			// Get a list of CSV file records
 			List<CSVRecord> records = csvFileParser.getRecords();
 
-			// Read the CSV file records starting from the first record since there's no
-			// header
+			// Read all the records since there's no header don't need to skip any
 			for (CSVRecord record : records) {
 				LogEntry logEntry = new LogEntry();
 				String dateString = record.get(0);
@@ -76,19 +77,38 @@ public class LogService {
 				logEntry.setRequest(record.get(2));
 				logEntry.setStatus(201);
 				logEntry.setUserAgent(record.get(4));
-				log.add(logEntry);
+				logs.add(logEntry);
 			}
-			logEntryRepository.saveAll(log);
 
 		}
+		return logs;
+	}
+	
+	/**
+	 * Makes a bulk of all the log entries
+	 * @param entries entries to persist
+	 */
+	public void saveLogs(List<LogEntry> entries) {
+		logEntryRepository.saveAll(entries);
 	}
 
+	/**
+	 * This method queries gets a list of ips that exceed the threshold between the start date and
+	 * the end date. The two first are passed by the user as arguments, the third one is calculated using
+	 * the duration argument
+	 * @return list of ips
+	 */
 	public List<String> findIPs() {
 		return logEntryRepository.findIPsByAccountAndCreatedBefore(params.getStartDate(), params.getEndDate(),
 				params.getThreshold());
 	}
 
-	public List<BlockedIP> getAndSaveBlockedIps(List<String> ips) {
+	/**
+	 * This method takes a list of ips and generating blockip objects.
+	 * @param ips list of ips
+	 * @return list of blockedip objects
+	 */
+	public List<BlockedIP> getBlockedIps(List<String> ips) {
 		List<BlockedIP> blockedIPs = new ArrayList<>();
 		ips.forEach(ip -> {
 			BlockedIP bIp = new BlockedIP();
@@ -97,25 +117,51 @@ public class LogService {
 					+ params.getStartDate().toString() + " and " + params.getEndDate().toString());
 			blockedIPs.add(bIp);
 		});
-		blockedIPRepository.saveAll(blockedIPs);
 		return blockedIPs;
 	}
 
+	/**
+	 * Makes a bulk of all the blocked ips
+	 * @param blockedIPs entries to persist
+	 */
+	public void saveBlockedIps(List<BlockedIP> blockedIPs) {
+		blockedIPRepository.saveAll(blockedIPs);
+	}
+	
+	/**
+	 * This method returns whether or not the user has set the --help argument
+	 * @return true if the user asked for help, false otherwise
+	 */
 	public boolean showHelp() {
 		return params.isHelp();
 	}
 
+	/**
+	 * This method returns whether or not the user has passed all the require arguments to the application
+	 * @return true if the user passed all the arguments, false otherwise
+	 */
 	public boolean requiredPresent() {
-		return params.requiredPresent();
+		return params.checkRequiredArguments();
 	}
 
+	/**
+	 * This method deletes all the database records
+	 */
+	/**
+	 * TODO: It is not clear on the task definition how to handle errors, if that
+	 * should be treated incrementally. For now I am assuming that the data is not
+	 * incremental and we only care about data in one file, and wether the app
+	 * finishes correctly or encounters an error the database is deleted.
+	 */
 	public void deleteDatabase() {
 		blockedIPRepository.deleteAll();
 		logEntryRepository.deleteAll();
 	}
 
-	/*
-	 * for testing purposes
+	/**
+	 * This method is for testing purposes, mocking the ApplicationArguments and updating
+	 * them allows us to test all the different scenarios 
+	 * @param args applicaciont arguments entered by the user
 	 */
 	protected void setParameters(ApplicationArguments args) {
 		this.params = new Parameters(args);

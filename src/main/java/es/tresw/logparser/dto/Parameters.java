@@ -28,6 +28,10 @@ public class Parameters {
 	@Setter(AccessLevel.NONE)
 	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd.HH:mm:ss");
 
+	/**
+	 * Parses the ApplicationArguments and parses them
+	 * @param args application arguments
+	 */
 	public Parameters(ApplicationArguments args) {
 		if (args != null) {
 			this.args = args;
@@ -39,6 +43,7 @@ public class Parameters {
 				this.startDate = LocalDateTime.parse(date, formatter);
 			}
 			if (args.containsOption("duration")) {
+				//Calculate the end date based on the duration argument
 				Duration duration = Duration.findByLabel(args.getOptionValues("duration").get(0));
 				switch (duration) {
 				case HOURLY:
@@ -48,6 +53,8 @@ public class Parameters {
 				case DAILY:
 					this.endDate = this.startDate.plusDays(1);
 					this.endDate = this.endDate.minusSeconds(1);
+					break;
+				default:
 					break;
 				}
 			}
@@ -62,9 +69,14 @@ public class Parameters {
 		}
 	}
 
-	public boolean requiredPresent() {
-		return (this.args != null && this.args.containsOption("accesslog") && this.args.containsOption("startDate")
-				&& this.args.containsOption("duration") && this.args.containsOption("threshold"));
+	/**
+	 * Checks if all the required arguments are present
+	 * @return
+	 */
+	public boolean checkRequiredArguments() {
+		return (this.args != null && this.endDate != null && this.args.containsOption("accesslog")
+				&& this.args.containsOption("startDate") && this.args.containsOption("duration")
+				&& this.args.containsOption("threshold"));
 	}
 
 }

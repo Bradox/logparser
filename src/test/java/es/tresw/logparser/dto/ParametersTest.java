@@ -34,7 +34,7 @@ public class ParametersTest {
 		when(args.getOptionValues("accesslog")).thenReturn(Arrays.asList("path"));
 
 		Parameters params = new Parameters(args);
-		assertTrue(params.requiredPresent());
+		assertTrue(params.checkRequiredArguments());
 	}
 
 	@Test
@@ -47,11 +47,11 @@ public class ParametersTest {
 		when(args.getOptionValues("accesslog")).thenReturn(Arrays.asList("path"));
 
 		Parameters params = new Parameters(args);
-		assertFalse(params.requiredPresent());
+		assertFalse(params.checkRequiredArguments());
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void durationWronEnumValue() {
+	@Test
+	public void durationWrongEnumValue() {
 
 		when(args.containsOption("help")).thenReturn(true);
 		when(args.containsOption("startDate")).thenReturn(true);
@@ -62,7 +62,8 @@ public class ParametersTest {
 		when(args.getOptionValues("threshold")).thenReturn(Arrays.asList("100"));
 		when(args.containsOption("accesslog")).thenReturn(true);
 		when(args.getOptionValues("accesslog")).thenReturn(Arrays.asList("path"));
-		new Parameters(args);
+		Parameters params = new Parameters(args);
+		assertFalse(params.checkRequiredArguments());
 	}
 
 }

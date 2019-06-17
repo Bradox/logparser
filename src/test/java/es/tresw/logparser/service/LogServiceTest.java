@@ -26,6 +26,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import es.tresw.logparser.model.BlockedIP;
 import es.tresw.logparser.model.LogEntry;
 import es.tresw.logparser.repository.BlockedIPRepository;
 import es.tresw.logparser.repository.LogEntryRepository;
@@ -86,7 +87,8 @@ public class LogServiceTest {
 		logService.setParameters(applicationArguments);
 		List<String> ips = logService.findIPs();
 		assertThat(ips, hasSize(2));
-		logService.getAndSaveBlockedIps(ips);
+		List<BlockedIP> bIps = logService.getBlockedIps(ips);
+		logService.saveBlockedIps(bIps);
 		assertThat(blockedIPRepository.findAll(), hasSize(2));
 	}
 
@@ -96,8 +98,8 @@ public class LogServiceTest {
 		when(applicationArguments.getOptionValues("threshold")).thenReturn(Arrays.asList("1"));
 		logService.setParameters(applicationArguments);
 		List<String> ips = logService.findIPs();
-		assertThat(ips, hasSize(2));
-		logService.getAndSaveBlockedIps(ips);
+		List<BlockedIP> bIps = logService.getBlockedIps(ips);
+		logService.saveBlockedIps(bIps);
 		assertThat(blockedIPRepository.findAll(), hasSize(2));
 	}
 
@@ -109,10 +111,12 @@ public class LogServiceTest {
 		String absolutePath = resourceDirectory.toFile().getAbsolutePath();
 		when(applicationArguments.getOptionValues("accesslog")).thenReturn(Arrays.asList(absolutePath + "/access.log"));
 		logService.setParameters(applicationArguments);
-		logService.parseFile();
+		List<LogEntry> entries = logService.parseFile();
+		logService.saveLogs(entries);
 		List<String> ips = logService.findIPs();
 		assertThat(ips, hasSize(2));
-		logService.getAndSaveBlockedIps(ips);
+		List<BlockedIP> bIps = logService.getBlockedIps(ips);
+		logService.saveBlockedIps(bIps);
 		assertThat(blockedIPRepository.findAll(), hasSize(2));
 	}
 }
