@@ -1,0 +1,8 @@
+
+Find all the ip's between start and end date with a threshold
+
+SELECT * FROM log_entry WHERE start_date BETWEEN startDate AND endDate GROUP BY ip HAVING count(ip) >= threshold
+
+Example
+
+SELECT * FROM log_entry WHERE start_date BETWEEN '2017-01-01 00:00:00' AND '2017-01-01 00:59:59' GROUP BY ip HAVING count(ip) >= 1
