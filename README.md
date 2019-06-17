@@ -82,8 +82,6 @@ The application was implemented using java8, spring-boot and maven
     for example: 
     
      java -jar parser-1.0.jar --accesslog=access.log  --startDate=2017-01-01.13:00:00 --duration=hourly --threshold=100
-     
-**Warning:** access.log is not inside deliverables use a correct path
 
 To show help run:
 
